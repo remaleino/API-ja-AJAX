@@ -1,11 +1,13 @@
+//Tiedosto sisältää kaikki päivän esitykset
 var ul1 = "https://www.finnkino.fi/xml/Schedule/";
 var ul2 = ul1 + "?area=";
 const d = new Date();
 var date = d.getDate() + "." + (d.getMonth() + 1) + "." + d.getFullYear();
 var end = "&dt=" + date;
+//Tiedosto sisältää pelkistetyn tiedon teattereista
 const theaters = 'https://www.finnkino.fi/xml/TheatreAreas/';
 const idList = {};
-
+// Kun dokumentti on latautunut, se lataa teattereiden-listan
 window.onload = function(){
     const xhttp = new XMLHttpRequest();
     xhttp.onload = function () {
@@ -14,6 +16,7 @@ window.onload = function(){
     xhttp.open("GET", theaters);
     xhttp.send();
 }
+//Listänään ensimmäiseen pudotusvalikkoon paikkakunnat
 function getLocations(data) {
     var data = data.responseXML;
     const listData = data.getElementsByTagName("Name")
@@ -36,6 +39,8 @@ function getLocations(data) {
         }
     });
 }
+/*Jos valitaan 1. pudotusvalikosta teatteri, niin ladataan uudestaan
+yleistä tietoa sisältävän tiedoston*/
 document.getElementById("locations").addEventListener("change", function(){
     const xhttp = new XMLHttpRequest();
     xhttp.onload = function () {
@@ -44,6 +49,7 @@ document.getElementById("locations").addEventListener("change", function(){
     xhttp.open("GET", theaters);
     xhttp.send();
 });
+//Lisätään 2. pudotusvalikkoon paikkakunnan teattereiden nimet
 function createData2(xml) {
     var e = document.getElementById("locations");
     var value = e.options[e.selectedIndex].value;
@@ -66,6 +72,8 @@ function createData2(xml) {
         }
     });
 }
+/*Muutetaan teattereiden nimien osien aina alkavan isosta
+alkukirjaimesta, mutta muiden kirjainten on oltava pieniä*/
 function modifyTheatreName(name){
     console.log(name)
     name = name.slice(1);
@@ -80,6 +88,7 @@ function modifyTheatreName(name){
     }
     return name;
 }
+//Lisätään teattereiden id:t listaan
 function createIdList(list) {
     for (var i = 0; i < list.length; i++) {
         if (!(idList.hasOwnProperty(list[i].childNodes[1]))) {
@@ -87,8 +96,10 @@ function createIdList(list) {
         }
     }
 }
+//Käsitellään valittuja valintoja
 document.getElementById("form").addEventListener("submit", (e) => {
     document.getElementById("main").innerHTML = "";
+    //Saadaan valitun teatterin id
     var textid = document.getElementById("theaters").value;
     var id = "";
     for (var key in idList) {
@@ -96,6 +107,8 @@ document.getElementById("form").addEventListener("submit", (e) => {
             id = key;
         }
     }
+    /*Muodostetaan linkki tiedostoon, josta löytyy
+    kaikki teatterin esitykset*/
     var ulLink = ul2 + id + end;
     e.preventDefault();
     const xhttp = new XMLHttpRequest();
@@ -105,12 +118,14 @@ document.getElementById("form").addEventListener("submit", (e) => {
     xhttp.open("GET", ulLink);
     xhttp.send();
 })
+//Lähetetään käsky tuloksien tulostamiseen
 function displayMovies(data) {
     data = data.responseXML.getElementsByTagName("Show");
     Array.from(data).forEach(show => {
         createTitle(show)
     });
 }
+//Piilotetaan kysymysmerkki ja näytetään tekstikenttä
 document.getElementById("searchButton").addEventListener("click", function () {
     var input = document.getElementById("textSearch");
     if (input.style.display = "none") {
@@ -118,6 +133,8 @@ document.getElementById("searchButton").addEventListener("click", function () {
         this.style.display = "none";
     }
 })
+/*Jos tekstikentässä painetaan enter-näppäintä,
+ohjelma nappaa tiedoston, joka sisältää kaikki tiedot*/
 document.getElementById("textSearch").addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
@@ -129,6 +146,9 @@ document.getElementById("textSearch").addEventListener("keydown", function (even
         xhttp.send();
     }
 })
+/*Funktio etsii arvo tiedoston paikkakuntien, teattereiden
+ja elokuvien nimistä. Mikäli osuma löytyy, lähetetään rivet
+tulostettavaksi*/
 function searchInput(data, value) {
     document.getElementById("main").innerHTML = "";
     data = data.responseXML.getElementsByTagName("Show");
@@ -142,6 +162,7 @@ function searchInput(data, value) {
         }
     });
 }
+//Tulostetaan elokuvan ikoni
 function createTitle(show) {
     var disp = document.getElementById("main");
     var title = show.getElementsByTagName("Title")[0].innerHTML;
@@ -161,6 +182,8 @@ function createTitle(show) {
         showStart + '</div>';
     disp.appendChild(div1);
 }
+/*Mikäli ikäraja-teksti sisältää "Anniskelu"-osan,
+funktio palauttaa tekstin "18"*/
 function testRating(rating) {
     if (rating.includes("Anniskelu")) {
         return "18"
@@ -168,6 +191,7 @@ function testRating(rating) {
         return rating
     }
 }
+//Funktio muokkaa aikan näkyvyyttä
 function getTime(time) {
     var time = time.split("T");
     time = time[1].split(":");
